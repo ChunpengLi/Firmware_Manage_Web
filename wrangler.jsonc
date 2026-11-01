@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "firmware-manage-web",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "firmware-manage-db",
+      "database_id": "321a88d4-7f9a-4663-a625-83339fe074b5",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "firmware-manage-files"
+    }
+  ],
+  "vars": {
+    "PUBLIC_DOWNLOADS": "false",
+    "AI_MODEL": "claude-sonnet-4-5-20250929",
+    "AI_MAX_TOKENS": "2048"
+  }
+}

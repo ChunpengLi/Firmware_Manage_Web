@@ -1,0 +1,7 @@
+node_modules/
+.wrangler/
+data/
+uploads/
+ai_workspace/
+*.log
+.env

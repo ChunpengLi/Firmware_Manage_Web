@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>固件与软件包管理系统</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Firmware & Software Repository</p>
+          <h1>固件与软件包管理系统</h1>
+        </div>
+        <div class="storage-note">
+          <span>文件存储</span>
+          <strong id="storageRoot">Cloudflare R2</strong>
+        </div>
+        <button id="adminAccountButton" class="secondary compact" type="button">管理员登录</button>
+      </section>
+
+      <nav class="page-tabs" aria-label="页面切换">
+        <a href="#ai" class="page-tab" data-page-link="ai">AI助手</a>
+        <a href="#firmware" class="page-tab active" data-page-link="firmware">固件管理</a>
+        <a href="#software" class="page-tab" data-page-link="software">软件管理</a>
+        <a href="#calendar" class="page-tab" data-page-link="calendar">更新日历</a>
+        <a href="#settings" class="page-tab" data-page-link="settings">选项设置</a>
+        <a href="#upgrade" class="page-tab" data-page-link="upgrade">部署</a>
+      </nav>
+
+      <section id="firmwarePage" class="page-view active" data-page="firmware">
+        <section class="workspace">
+          <form id="firmwareForm" class="panel upload-panel">
+            <div class="panel-head">
+              <h2 id="firmwareFormTitle">上传固件</h2>
+              <span id="firmwareStatus" class="status"></span>
+            </div>
+
+            <input name="recordId" type="hidden" />
+            <input name="category" type="hidden" value="firmware" />
+
+            <div class="field-grid">
+              <label>
+                <span>适用机型</span>
+                <button type="button" class="scenario-picker" data-multi-picker data-options-key="firmwareModels" data-picker-title="选择适用机型" data-picker-placeholder="请选择适用机型">请选择适用机型</button>
+                <input name="model" type="hidden" />
+                <div class="selected-scenarios"></div>
+              </label>
+              <label>
+                <span>适用场景</span>
+                <button type="button" class="scenario-picker" data-multi-picker data-options-key="scenarios" data-picker-title="选择适用场景" data-picker-placeholder="请选择适用场景">请选择适用场景</button>
+                <input name="scenario" type="hidden" />
+                <div class="selected-scenarios"></div>
+              </label>
+            </div>
+
+            <div class="version-list">
+              <div class="version-row">
+                <label>
+                  <span>CPU1 版本号</span>
+                  <input name="cpu1Version" type="text" placeholder="例如 V1.0.0" required />
+                </label>
+                <label>
+                  <span>CPU1 源代码 SVN（选填）</span>
+                  <input name="cpu1SourceSvn" type="text" placeholder="例如 svn://server/project/cpu1" />
+                </label>
+              </div>
+              <div class="version-row">
+                <label>
+                  <span>CPU2 版本号</span>
+                  <input name="cpu2Version" type="text" placeholder="例如 V1.0.0" required />
+                </label>
+                <label>
+                  <span>CPU2 源代码 SVN（选填）</span>
+                  <input name="cpu2SourceSvn" type="text" placeholder="例如 svn://server/project/cpu2" />
+                </label>
+              </div>
+              <div class="version-row">
+                <label>
+                  <span>FPGA 版本号</span>
+                  <input name="fpgaVersion" type="text" placeholder="例如 V1.0.0" required />
+                </label>
+                <label>
+                  <span>FPGA 源代码 SVN（选填）</span>
+                  <input name="fpgaSourceSvn" type="text" placeholder="例如 svn://server/project/fpga" />
+                </label>
+              </div>
+              <div class="version-row">
+                <label>
+                  <span>ARM 版本号</span>
+                  <input name="armVersion" type="text" placeholder="例如 V1.0.0" required />
+                </label>
+                <label>
+                  <span>ARM 源代码 SVN（选填）</span>
+                  <input name="armSourceSvn" type="text" placeholder="例如 svn://server/project/arm" />
+                </label>
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <label>
+                <span>启用日期</span>
+                <input name="enableDate" type="date" />
+              </label>
+              <label>
+                <span>运行模式</span>
+                <button type="button" class="scenario-picker" data-multi-picker data-options-key="gridModes" data-picker-title="选择运行模式" data-picker-placeholder="请选择运行模式">请选择运行模式</button>
+                <input name="gridMode" type="hidden" />
+                <div class="selected-scenarios"></div>
+              </label>
+            </div>
+
+            <label>
+              <span>适用单机上位机版本号</span>
+              <input name="applicableSingleVersion" type="text" />
+            </label>
+            <label>
+              <span>适用多机上位机版本号</span>
+              <input name="applicableMultiVersion" type="text" />
+            </label>
+            <label>
+              <span>适用自动化软件版本号</span>
+              <input name="applicableAutomationVersion" type="text" />
+            </label>
+
+            <label>
+              <span>说明</span>
+              <textarea name="description" rows="3" placeholder="适配说明、变更内容或注意事项"></textarea>
+            </label>
+
+            <label class="file-drop">
+              <input name="packageFile" type="file" accept=".zip,.rar,.7z,application/zip,application/x-zip-compressed,application/x-rar-compressed,application/x-7z-compressed" required />
+              <span>选择固件压缩包</span>
+              <strong id="firmwareChosenFile">尚未选择文件</strong>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit" id="firmwareSubmitButton">上传到服务器</button>
+              <button type="button" id="firmwareCancelEditButton" class="secondary" hidden>取消编辑</button>
+            </div>
+          </form>
+
+          <section class="panel list-panel">
+            <div class="panel-head">
+              <div>
+                <h2>固件列表</h2>
+                <p id="firmwareSummary">0 个文件</p>
+              </div>
+              <button id="firmwareRefreshButton" class="secondary" type="button">刷新</button>
+            </div>
+
+            <div class="filters firmware-filters">
+              <select id="firmwareFilterModel"></select>
+              <select id="firmwareFilterGridMode"></select>
+              <input id="firmwareFilterVersion" type="search" placeholder="版本号" />
+              <input id="firmwareFilterKeyword" type="search" placeholder="关键字" />
+            </div>
+
+            <div class="table-wrap">
+              <table class="firmware-table">
+                <thead>
+                  <tr>
+                    <th class="col-model">适用机型</th>
+                    <th>适用场景</th>
+                    <th>4 种版本号</th>
+                    <th>启用日期</th>
+                    <th>运行模式</th>
+                    <th>软件适用版本</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="firmwareRows"></tbody>
+              </table>
+              <div id="firmwareEmptyState" class="empty">暂无固件文件</div>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="softwarePage" class="page-view" data-page="software" hidden>
+        <section class="workspace">
+          <form id="softwareForm" class="panel upload-panel">
+            <div class="panel-head">
+              <h2 id="softwareFormTitle">上传软件</h2>
+              <span id="softwareStatus" class="status"></span>
+            </div>
+
+            <input name="recordId" type="hidden" />
+            <input name="category" type="hidden" value="software" />
+
+            <label>
+              <span>软件名称</span>
+              <select name="softwareName" data-software-name required></select>
+            </label>
+
+            <div class="field-grid">
+              <label>
+                <span>版本号</span>
+                <input name="version" type="text" placeholder="例如 V1.2.3" required />
+              </label>
+              <label>
+                <span>启用时间</span>
+                <input name="enableDate" type="date" required />
+              </label>
+            </div>
+
+            <div class="field-grid">
+              <label>
+                <span>适用机型</span>
+                <button type="button" class="scenario-picker" data-multi-picker data-options-key="firmwareModels" data-picker-title="选择适用机型" data-picker-placeholder="请选择适用机型">请选择适用机型</button>
+                <input name="model" type="hidden" />
+                <div class="selected-scenarios"></div>
+              </label>
+              <label>
+                <span>适用场景</span>
+                <button type="button" class="scenario-picker" data-multi-picker data-options-key="scenarios" data-picker-title="选择适用场景" data-picker-placeholder="请选择适用场景">请选择适用场景</button>
+                <input name="scenario" type="hidden" />
+                <div class="selected-scenarios"></div>
+              </label>
+            </div>
+
+            <label>
+              <span>源代码 SVN（选填）</span>
+              <input name="sourceSvn" type="text" placeholder="例如 svn://server/project/software" />
+            </label>
+
+            <label>
+              <span>说明</span>
+              <textarea name="description" rows="3" placeholder="功能说明、变更内容或注意事项"></textarea>
+            </label>
+
+            <label class="file-drop">
+              <input name="packageFile" type="file" accept=".zip,.rar,.7z,application/zip,application/x-zip-compressed,application/x-rar-compressed,application/x-7z-compressed" required />
+              <span>选择软件压缩包</span>
+              <strong id="softwareChosenFile">尚未选择文件</strong>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit" id="softwareSubmitButton">上传到服务器</button>
+              <button type="button" id="softwareCancelEditButton" class="secondary" hidden>取消编辑</button>
+            </div>
+          </form>
+
+          <section class="panel list-panel">
+            <div class="panel-head">
+              <div>
+                <h2>软件列表</h2>
+                <p id="softwareSummary">0 个文件</p>
+              </div>
+              <button id="softwareRefreshButton" class="secondary" type="button">刷新</button>
+            </div>
+
+            <div class="filters software-filters">
+              <select id="softwareFilterName"></select>
+              <select id="softwareFilterModel"></select>
+              <input id="softwareFilterVersion" type="search" placeholder="版本号" />
+              <input id="softwareFilterKeyword" type="search" placeholder="关键字" />
+            </div>
+
+            <div class="table-wrap">
+              <table class="software-table">
+                <thead>
+                  <tr>
+                    <th>软件名称</th>
+                    <th>版本号</th>
+                    <th class="col-model">适用机型</th>
+                    <th>适用场景</th>
+                    <th>启用时间</th>
+                    <th>说明</th>
+                    <th>文件</th>
+                    <th>服务器路径</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="softwareRows"></tbody>
+              </table>
+              <div id="softwareEmptyState" class="empty">暂无软件文件</div>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="calendarPage" class="page-view" data-page="calendar" hidden>
+        <section class="panel calendar-panel">
+          <div class="panel-head calendar-head">
+            <div>
+              <h2>更新日历</h2>
+              <p id="calendarSummary">0 个更新记录</p>
+            </div>
+            <div class="calendar-actions">
+              <button id="calendarPrevMonth" class="secondary compact" type="button">上一月</button>
+              <input id="calendarMonth" class="month-picker" type="month" />
+              <button id="calendarNextMonth" class="secondary compact" type="button">下一月</button>
+              <button id="calendarRefreshButton" class="secondary compact" type="button">刷新</button>
+            </div>
+          </div>
+
+          <div class="filters calendar-filters">
+            <select id="calendarFilterCategory">
+              <option value="">全部类型</option>
+              <option value="firmware">固件</option>
+              <option value="software">软件</option>
+            </select>
+            <select id="calendarFilterModel"></select>
+            <input id="calendarFilterVersion" type="search" placeholder="版本号" />
+            <input id="calendarFilterKeyword" type="search" placeholder="关键字" />
+          </div>
+
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>周一</span>
+            <span>周二</span>
+            <span>周三</span>
+            <span>周四</span>
+            <span>周五</span>
+            <span>周六</span>
+            <span>周日</span>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </section>
+
+        <section class="panel calendar-detail-panel">
+          <div class="panel-head">
+            <div>
+              <h2 id="calendarDetailTitle">当日更新</h2>
+              <p id="calendarDetailSummary">请选择有更新的日期</p>
+            </div>
+          </div>
+          <div id="calendarDetailList" class="calendar-detail-list"></div>
+          <div id="calendarEmptyState" class="empty">当月没有符合条件的更新记录</div>
+        </section>
+      </section>
+
+      <section id="settingsPage" class="page-view" data-page="settings" hidden>
+        <section class="panel">
+          <div class="panel-head">
+            <h2>选项设置</h2>
+            <span id="settingsStatus" class="status"></span>
+          </div>
+          <div class="settings-content">
+            <button id="editModelsBtn" class="settings-btn" type="button">编辑机型选项</button>
+            <button id="editScenariosBtn" class="settings-btn" type="button">编辑场景选项</button>
+            <button id="editGridModesBtn" class="settings-btn" type="button">编辑运行模式选项</button>
+            <button id="editSoftwareNamesBtn" class="settings-btn" type="button">编辑软件名称选项</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="upgradePage" class="page-view" data-page="upgrade" hidden>
+        <section class="panel upgrade-panel">
+          <div class="panel-head">
+            <div>
+              <h2>网站部署</h2>
+              <p>应用由 GitHub 仓库构建并发布到 Cloudflare Workers。</p>
+            </div>
+          </div>
+          <p id="upgradeStatus" class="upgrade-status" role="status">代码推送到 main 后会触发自动部署。固件与软件文件存放在 Cloudflare R2，记录存放在 D1。</p>
+        </section>
+      </section>
+
+      <section id="aiPage" class="page-view" data-page="ai" hidden>
+        <section class="panel ai-panel">
+          <div class="panel-head">
+            <div>
+              <h2>AI助手</h2>
+              <p id="aiSummary">基于已登记的固件与软件记录进行检索、对比与总结</p>
+            </div>
+            <div class="ai-head-actions">
+              <span id="aiStatus" class="status"></span>
+              <button id="aiClearButton" class="secondary compact" type="button">清空对话</button>
+            </div>
+          </div>
+
+          <div id="aiQuickActions" class="ai-quick-actions"></div>
+
+          <div class="ai-chat">
+            <div id="aiMessages" class="ai-messages"></div>
+            <div id="aiEmpty" class="ai-empty">
+              <p>向 AI 提问，例如“最新版本的 430X 固件是哪个？”、“按机型汇总所有软件版本”。</p>
+              <p class="ai-empty-hint">AI 只会基于系统中已登记的记录作答，不会编造数据。</p>
+            </div>
+          </div>
+
+          <form id="aiForm" class="ai-input-bar">
+            <textarea id="aiInput" rows="1" placeholder="输入你的问题，Enter 发送，Shift+Enter 换行" autocomplete="off"></textarea>
+            <button type="submit" id="aiSendButton">发送</button>
+            <button type="button" id="aiStopButton" class="secondary" hidden>停止</button>
+          </form>
+        </section>
+      </section>
+
+      <div id="firmwareDetailDialog" class="detail-dialog" role="dialog" aria-modal="true" aria-labelledby="firmwareDetailTitle" hidden>
+        <div class="detail-card">
+          <div class="panel-head">
+            <div>
+              <h2 id="firmwareDetailTitle">固件详情</h2>
+              <p id="firmwareDetailSummary">固件记录详情</p>
+            </div>
+            <button id="firmwareDetailClose" class="secondary compact" type="button">关闭</button>
+          </div>
+          <div id="firmwareDetailContent" class="detail-content"></div>
+        </div>
+      </div>
+
+      <div id="optionsEditDialog" class="dialog-overlay" role="dialog" aria-modal="true" hidden>
+        <div class="dialog">
+          <div class="dialog-header">
+            <h3 id="optionsEditTitle">编辑选项</h3>
+            <button id="optionsEditClose" class="secondary compact" type="button">关闭</button>
+          </div>
+          <div id="optionsEditList" class="options-edit-list"></div>
+          <div class="dialog-actions">
+            <button id="optionsEditCancel" class="secondary" type="button">取消</button>
+            <button id="optionsEditSave" class="primary" type="button">保存</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="system-footer">
+        <span>系统版本：V1.0.6</span>
+        <span>更新日期：2026-06-27</span>
+        <span>联系人：李春鹏 电力电子部</span>
+      </footer>
+    </main>
+
+    <div id="scenarioDialog" class="dialog-overlay" hidden>
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3 id="scenarioDialogTitle">选择适用场景</h3>
+          <button id="scenarioDialogClose" class="secondary compact" type="button">关闭</button>
+        </div>
+        <div id="scenarioList" class="scenario-list"></div>
+        <div class="dialog-actions">
+          <button id="scenarioDialogCancel" class="secondary" type="button">取消</button>
+          <button id="scenarioDialogConfirm" type="button">确认选择</button>
+        </div>
+      </div>
+    </div>
+
+    <dialog id="adminLoginDialog" class="admin-login-dialog">
+      <form id="adminLoginForm" method="dialog">
+        <h2>管理员登录</h2>
+        <label>
+          <span>管理员密码</span>
+          <input id="adminPassword" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="adminLoginStatus" class="status" role="status"></p>
+        <div class="dialog-actions">
+          <button id="adminLoginCancel" class="secondary" type="button">取消</button>
+          <button id="adminLoginSubmit" type="submit">登录</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
