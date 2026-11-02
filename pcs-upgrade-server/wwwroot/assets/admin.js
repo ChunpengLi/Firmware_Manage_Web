@@ -93,10 +93,31 @@
       const started = await request(`/api/admin/${kind}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...fields, fileName: file.name, fileSize: file.size }) });
       uploadId = started.uploadId;
       for (let offset = 0, part = 1; offset < file.size; offset += started.chunkSize, part++) {
-        await request(`/api/admin/uploads/${uploadId}/parts/${part}`, { method: "PUT", body: file.slice(offset, offset + started.chunkSize) });
-        status.textContent = `上传进度 ${Math.min(100, Math.round((offset + started.chunkSize) / file.size * 100))}%`;
+        const chunk = file.slice(offset, Math.min(file.size, offset + started.chunkSize));
+        let lastError;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            await uploadPart(uploadId, part, chunk, (loaded, elapsed) => {
+              const totalLoaded = Math.min(file.size, offset + loaded);
+              const percent = Math.min(100, Math.floor(totalLoaded / file.size * 100));
+              const rate = elapsed > 0 ? loaded / elapsed * 1000 : 0;
+              const remaining = rate > 0 ? Math.ceil((file.size - totalLoaded) / rate) : null;
+              const speed = rate >= 1024 * 1024 ? `${(rate / 1024 / 1024).toFixed(1)} MB/s` : `${(rate / 1024).toFixed(0)} KB/s`;
+              status.textContent = `正在传输 ${percent}% · ${speed}${remaining === null ? "" : ` · 约剩 ${remaining} 秒`}`;
+            });
+            lastError = null;
+            break;
+          } catch (error) {
+            lastError = error;
+            if (attempt === 2 || !error.retryable) throw error;
+            status.textContent = `第 ${part} 片连接中断，正在重试 ${attempt + 1}/2…`;
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          }
+        }
+        if (lastError) throw lastError;
+        status.textContent = `已传至 R2 ${Math.min(100, Math.floor((offset + chunk.size) / file.size * 100))}%`;
       }
-      status.textContent = "上传完成，正在校验 MD5…";
+      status.textContent = "分片已传至 R2，正在合并并校验…";
       const response = await request(`/api/admin/uploads/${uploadId}/complete`, { method: "POST" });
       uploadId = null;
       status.textContent = `发布成功 · MD5 ${response.md5}`;
@@ -109,6 +130,43 @@
     } finally {
       button.disabled = false;
     }
+  }
+
+  function uploadPart(uploadId, part, chunk, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const startedAt = performance.now();
+      xhr.open("PUT", `/api/admin/uploads/${encodeURIComponent(uploadId)}/parts/${part}`);
+      xhr.withCredentials = true;
+      xhr.timeout = 10 * 60 * 1000;
+      xhr.upload.onprogress = event => {
+        if (event.lengthComputable) onProgress(event.loaded, performance.now() - startedAt);
+      };
+      xhr.onload = () => {
+        let body = {};
+        try { body = JSON.parse(xhr.responseText); } catch {}
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(body);
+          return;
+        }
+        if (xhr.status === 401) showLogin();
+        const error = new Error(body.error || body.title || `分片上传失败 (${xhr.status})`);
+        error.retryable = xhr.status === 408 || xhr.status === 429 || xhr.status >= 500;
+        reject(error);
+      };
+      xhr.onerror = () => {
+        const error = new Error("网络连接中断");
+        error.retryable = true;
+        reject(error);
+      };
+      xhr.ontimeout = () => {
+        const error = new Error("分片上传超时");
+        error.retryable = true;
+        reject(error);
+      };
+      xhr.onabort = () => reject(new Error("分片上传已取消"));
+      xhr.send(chunk);
+    });
   }
 
   $("loginForm").addEventListener("submit", async (event) => {
