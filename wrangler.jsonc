@@ -24,7 +24,7 @@
     }
   ],
   "vars": {
-    "PUBLIC_DOWNLOADS": "false",
+    "PUBLIC_DOWNLOADS": "true",
     "AI_MODEL": "claude-sonnet-4-5-20250929",
     "AI_MAX_TOKENS": "2048"
   }

@@ -36,7 +36,7 @@ npm run dev
 
 ## 数据与访问
 
-- 下载默认要求管理员登录；可在 Worker 变量中将 `PUBLIC_DOWNLOADS` 设为 `true` 开放匿名下载。
+- 网页中的下载按钮要求管理员账户登录；`PUBLIC_DOWNLOADS=true` 时，文件 API 直链仍可匿名下载。当前登录使用 Worker 的 `ADMIN_PASSWORD`，尚未接入独立 HS 单点登录。
 - 每个文件通过 8 MiB 分片上传到 R2，单文件上限 1 GiB。
 - D1 与 R2 是独立资源；应分别启用备份或定期导出。
 - `data/`、`uploads/` 和 `ai_workspace/` 等本地运行数据被 Git 忽略，不会随代码推送。

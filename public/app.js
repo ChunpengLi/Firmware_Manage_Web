@@ -1245,7 +1245,7 @@ function bindUpgradeEvents() {
   selectors.adminLoginCancel.addEventListener("click", () => selectors.adminLoginDialog.close());
   document.addEventListener("click", async (event) => {
     const link = event.target.closest("a[href*='/download']");
-    if (!link || state.publicDownloads || state.adminAuthenticated) return;
+    if (!link || state.adminAuthenticated) return;
     event.preventDefault();
     if (await requestAdminLogin()) location.assign(link.href);
   }, true);
