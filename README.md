@@ -1,4 +1,6 @@
-# 固件与软件包管理系统
+# HS PCS Upgrade Server
+
+> 当前生产应用已更换为 `HS_PCS_PC/PcsUpgradeServer` 的云端适配版，访问 https://cpeng.uk 。旧管理系统不再提供服务。下面原系统的说明仅作历史参考；当前部署与接口说明见 [PCS 部署说明](pcs-upgrade-server/README.md)。
 
 应用运行在 Cloudflare Workers，不依赖本地电脑常开。静态页面由 Workers Assets 提供，记录和选项保存在 D1，固件与软件压缩包存放在 R2。
 

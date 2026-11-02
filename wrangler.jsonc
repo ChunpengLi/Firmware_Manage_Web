@@ -1,13 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "firmware-manage-web",
-  "main": "worker/index.js",
+  "main": "pcs-upgrade-server/worker.js",
   "compatibility_date": "2025-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
-    "directory": "./public",
+    "directory": "./pcs-upgrade-server/wwwroot",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": true
   },
   "d1_databases": [
     {
@@ -24,8 +24,7 @@
     }
   ],
   "vars": {
-    "PUBLIC_DOWNLOADS": "true",
-    "AI_MODEL": "claude-sonnet-4-5-20250929",
-    "AI_MAX_TOKENS": "2048"
-  }
+    "ADMIN_USERNAME": "HS"
+  },
+  "routes": [{ "pattern": "cpeng.uk", "custom_domain": true }]
 }

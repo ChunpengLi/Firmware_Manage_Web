@@ -1,13 +1,13 @@
 {
   "name": "firmware-manage-web",
   "version": "1.0.0",
-  "description": "Cloudflare Workers firmware and software package manager.",
-  "main": "worker/index.js",
+  "description": "HS PCS Upgrade Server on Cloudflare Workers, D1 and R2.",
+  "main": "pcs-upgrade-server/worker.js",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:migrate": "wrangler d1 migrations apply firmware-manage-db --remote",
-    "test": "node --experimental-default-type=module --test"
+    "test": "node --test"
   },
   "dependencies": {
     "fflate": "^0.8.3"

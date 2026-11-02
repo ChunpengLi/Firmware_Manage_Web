@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f6f8">
+  <title>HS 软件与固件管理</title>
+  <link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body>
+  <main id="loginView" class="login-view">
+    <form id="loginForm" class="login-box">
+      <div class="brand-mark">HS</div>
+      <div class="eyebrow">HS PCS · SERVER CONSOLE</div>
+      <h1>服务器管理</h1>
+      <label>账号<input id="username" name="username" value="HS" autocomplete="username" required></label>
+      <label>密码<input id="password" name="password" type="password" autocomplete="current-password" required autofocus></label>
+      <button class="button primary" type="submit">登录</button>
+      <p id="loginError" class="error" role="alert"></p>
+    </form>
+  </main>
+
+  <div id="appView" class="app-view" hidden>
+    <header class="topbar">
+      <a class="brand" href="#software"><span class="brand-mark small">HS</span><span>HS PCS <small>管理中心</small></span></a>
+      <div class="top-actions"><span id="accountName" class="account"></span><button id="logout" class="button quiet">退出</button></div>
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="nav-label">管理</div>
+        <button class="nav-item active" data-view="software"><span class="nav-icon">▤</span>软件管理</button>
+        <button class="nav-item" data-view="firmware"><span class="nav-icon">▧</span>固件管理</button>
+        <button class="nav-item" data-view="registry"><span class="nav-icon">⌘</span>注册码</button>
+        <div class="side-bottom"><span class="online-dot"></span>服务器运行中</div>
+      </aside>
+
+      <section class="content">
+        <div class="connection"><div><span class="eyebrow">上位机连接地址</span><strong id="serverAddress"></strong></div><button id="copyAddress" class="button quiet">复制地址</button></div>
+
+        <section id="softwareView" class="panel-view">
+          <div class="page-heading"><div><div class="eyebrow">RELEASES</div><h1>软件管理</h1><p>管理上位机可查询和下载的软件版本。</p></div><span id="softwareCount" class="count"></span></div>
+          <form id="softwareForm" class="publish-form">
+            <div class="form-title"><div><h2>发布软件版本</h2><p>ZIP 包发布后会立即出现在上位机版本列表中。</p></div><label class="file-button">选择 ZIP<input type="file" name="file" accept=".zip,application/zip" required></label></div>
+            <div class="form-grid"><label>版本号<input name="version" placeholder="如 4.1.0.0" required maxlength="80"></label><label>显示名称<input name="displayName" value="波形录波上位机 UARTGrapher"></label><label class="wide">更新说明<input name="changelog" placeholder="本版本更新内容"></label></div>
+            <div class="form-foot"><span class="form-status" id="softwareStatus"></span><button class="button primary" type="submit">发布软件</button></div>
+          </form>
+          <div class="table-wrap"><table><thead><tr><th>版本</th><th>文件</th><th>大小</th><th>发布时间</th><th>MD5</th><th></th></tr></thead><tbody id="softwareRows"></tbody></table><div id="softwareEmpty" class="empty" hidden>暂无已发布的软件包</div></div>
+        </section>
+
+        <section id="firmwareView" class="panel-view" hidden>
+          <div class="page-heading"><div><div class="eyebrow">PCS FIRMWARE</div><h1>固件管理</h1><p>发布 PCS 整套固件 ZIP，并记录各组件版本。</p></div><span id="firmwareCount" class="count"></span></div>
+          <form id="firmwareForm" class="publish-form">
+            <div class="form-title"><div><h2>发布固件版本</h2><p>上位机通过 PCS 整套固件接口获取发布记录。</p></div><label class="file-button">选择 ZIP<input type="file" name="file" accept=".zip,application/zip" required></label></div>
+            <div class="form-grid"><label>版本号<input name="version" placeholder="如 2026-11-02" required maxlength="80"></label><label>显示名称<input name="displayName" value="PCS 固件整套"></label><label>CPU01 版本<input name="cpu01" placeholder="可选"></label><label>CPU02 版本<input name="cpu02" placeholder="可选"></label><label>FPGA 版本<input name="fpga" placeholder="可选"></label><label class="wide">更新说明<input name="changelog" placeholder="本版本更新内容"></label></div>
+            <div class="form-foot"><span class="form-status" id="firmwareStatus"></span><button class="button primary" type="submit">发布固件</button></div>
+          </form>
+          <div class="table-wrap"><table><thead><tr><th>版本</th><th>文件</th><th>组件</th><th>发布时间</th><th>MD5</th><th></th></tr></thead><tbody id="firmwareRows"></tbody></table><div id="firmwareEmpty" class="empty" hidden>暂无已发布的固件</div></div>
+        </section>
+
+        <section id="registryView" class="panel-view registry-view" hidden>
+          <div class="page-heading"><div><div class="eyebrow">LICENSE TOOL</div><h1>注册码</h1><p>UARTGrapher 注册码生成与解密。</p></div></div>
+          <iframe id="registryFrame" title="注册码生成器" loading="lazy"></iframe>
+        </section>
+      </section>
+    </div>
+    <div id="toast" role="status"></div>
+  </div>
+  <script src="/assets/admin.js" defer></script>
+</body>
+</html>

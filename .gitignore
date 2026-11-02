@@ -5,3 +5,10 @@ uploads/
 ai_workspace/
 *.log
 .env
+.dev.vars
+pcs-upgrade-server/Program.cs
+pcs-upgrade-server/PcsUpgradeServer.csproj
+pcs-upgrade-server/import.sql
+pcs-upgrade-server/wwwroot/registry/
+pcs-upgrade-server/registry-private.html
+repo-info.tmp.json
